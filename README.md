@@ -1,1 +1,89 @@
-# azure
+Path-Based Routing with Azure Application Gateway and Custom Domain Overview
+This project demonstrates how to deploy two backend applications on Azure Virtual Machines, configure path-based routing using Azure Application Gateway, and host the applications on a custom domain (ishan.shop) purchased via Hostinger.
+
+Infrastructure Setup
+Virtual Machine Instances
+Two Linux virtual machines (VM-Images and VM-Videos) were created in Azure. Each VM was configured with an Nginx web server to serve unique content based on the URL path:
+
+VM-Images was set up to serve content for the /images/* route, displaying the message "Hey there from VM1".
+
+VM-Videos was set up to serve content for the /videos/* route, displaying the message "Hey there from VM2".
+
+![1](https://github.com/user-attachments/assets/1bbe9696-321b-4539-8a8c-af311586cb41)
+
+![2](https://github.com/user-attachments/assets/9e971591-391d-45d1-8719-71b2a38d62f7)
+
+![3](https://github.com/user-attachments/assets/5e21aae9-1d84-4a6a-8d3b-182db532ae34)
+
+Application Gateway Configuration
+An Azure Application Gateway (My-App-Gateway) was deployed to manage and route traffic to the backend virtual machines. The configuration included:
+
+A public frontend IP (my-gateway-pip) was assigned to receive incoming traffic from the internet.
+
+Two backend pools were created: images-pool pointing to the private IP of VM-Images, and videos-pool pointing to the private IP of VM-Videos.
+
+An HTTP listener (HTTP-Listener) was configured to listen on port 80 for user requests, with a corresponding HTTP setting (app-http-setting) to forward traffic to the backend servers on port 80.
+
+![4](https://github.com/user-attachments/assets/cf4e63ef-f3fa-4cbc-b509-b54e9b509d5b)
+
+![5](https://github.com/user-attachments/assets/9432fc96-fdf9-4295-9864-136885f79022)
+
+
+
+A path-based routing rule (Main-Routing-Rule) was established to direct traffic intelligently based on the URL path:
+
+Requests for http://ishan.shop/images/* are routed to the images-pool (VM-Images).
+
+Requests for http://ishan.shop/videos/* are routed to the videos-pool (VM-Videos).
+
+
+
+
+Path-Based Routing Rules
+A request routing rule (Main-Routing-Rule) was configured to direct traffic from the domain ishan.shop to the appropriate backend server based on the URL's path:
+
+Requests to http://ishan.shop/images/* are routed to the images-pool, which is associated with VM-Images.
+
+Requests to http://ishan.shop/videos/* are routed to the videos-pool, which is associated with VM-Videos.
+
+A default rule was also set, routing all other traffic (e.g., to the root domain http://ishan.shop/) to the images-pool.
+
+  
+
+
+
+Testing and Custom Domain Integration
+After deployment, the complete setup was tested by accessing the custom domain, ishan.shop. The path-based routing was confirmed to be working correctly, directing users to the respective backend servers based on the URL path entered.
+
+
+
+
+Domain Setup
+A custom domain, ishan.shop, was purchased from Hostinger. To integrate it with the Application Gateway, A records for both the root domain (@) and the www subdomain were created directly in the Hostinger DNS panel. Both records were pointed to the public IP address of the Azure Application Gateway.
+![6](https://github.com/user-attachments/assets/88ef9fc3-cfdf-4b79-81fe-6c1c8130dfa1)
+
+
+
+
+Application Gateway Listener
+A Basic listener named HTTP-Listener was configured on the Application Gateway. This listener was set up to receive all incoming HTTP traffic on port 80 that arrives at the gateway's public IP address. Because the custom domain ishan.shop is pointed to this IP via DNS, the listener processes all web requests sent to the domain, passing them to the routing rule for inspection.
+
+![7](https://github.com/user-attachments/assets/8d41f521-394c-4ab6-b98b-d247c29dbc73)
+
+![8](https://github.com/user-attachments/assets/b8105161-8b3a-49df-b58c-1095ea6f3649)
+
+![9](https://github.com/user-attachments/assets/a0b7e937-1c03-4ec3-ab0e-22c490ed653b)
+
+
+
+
+Validation
+The Backend health status was checked in the Azure Application Gateway portal. It confirmed a "Healthy" status for both the images-pool and videos-pool, indicating successful connectivity to VM-Images and VM-Videos.
+
+An external tool (dnschecker.org) was used to verify DNS propagation. The check confirmed that the ishan.shop domain was correctly resolving to the Application Gateway's public IP address globally.
+
+End-to-end testing using the custom domain successfully validated the path-based routing rules:
+
+Navigating to http://ishan.shop/images/ correctly routed to VM-Images and displayed the message "Hey there from VM1".
+
+Navigating to http://ishan.shop/videos/ correctly routed to VM-Videos and displayed the message "Hey there from VM2".
